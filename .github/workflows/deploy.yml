@@ -1,35 +1,10 @@
-name: Build and Push to ECR and ACR
+$ACR_NAME = "user18AbcShopBackend"       # ACR 이름
+$ACR_LOGIN_SERVER = "user18AbcShopBackend.azurecr.io"  # 자동 생성되는 주소
+$IMAGE_NAME = "hello-world"    # 테스트용 이미지 이름
+$IMAGE_TAG = "v1"             # 태그
 
-on:
-  workflow_dispatch:
-    inputs:
-      image_tag:
-        description: 'Image tag (e.g., latest, 1.0.0)'
-        required: true
-        default: 'latest'
-        type: string
 
-jobs:
-  build-and-push:
-    name: Build and Push Container Image
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-            
-      - name: Login to Azure ACR
-        uses: azure/docker-login@v1
-        with:
-          login-server: ${{ secrets.ACR_LOGIN_SERVER }}
-          username: ${{ secrets.ACR_USERNAME }}
-          password: ${{ secrets.ACR_PASSWORD }}
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          tags: |
-            ${{ secrets.ACR_LOGIN_SERVER }}/${{ secrets.ACR_REPOSITORY }}:${{ github.event.inputs.image_tag }}
-
+az acr login --name $ACR_NAME
+docker pull mcr.microsoft.com/hello-world
+docker tag mcr.microsoft.com/hello-world $ACR_LOGIN_SERVER/$IMAGE_NAME:$IMAGE_TAG
+docker push $ACR_LOGIN_SERVER/$IMAGE_NAME:$IMAGE_TAG
