@@ -40,10 +40,5 @@ jobs:
           tags: |
             ${{ secrets.ECR_BACKEND_REPOSITORY }}:${{ github.event.inputs.image_tag }}
             
-      - name: Login to Azure ACR
-        uses: azure/docker-login@v1
-        with:
-          login-server: ${{ secrets.ACR_LOGIN_SERVER }}
-          username: ${{ secrets.ACR_USERNAME }}
-          password: ${{ secrets.ACR_PASSWORD }}
+
 
