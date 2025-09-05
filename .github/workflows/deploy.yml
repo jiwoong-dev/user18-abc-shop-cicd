@@ -71,14 +71,14 @@ jobs:
           use: true
 
       # 8. Azure ACR로 빌드 및 푸시
-      - name: Build and Push to Azure ACR
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          builder: acr-builder
-          tags: |
-            ${{ secrets.ACR_LOGIN_SERVER }}/${{ secrets.ACR_REPOSITORY }}:${{ github.event.inputs.image_tag }}
+#      - name: Build and Push to Azure ACR
+#        uses: docker/build-push-action@v5
+#        with:
+#          context: .
+#          push: true
+#          builder: acr-builder
+#          tags: |
+#            ${{ secrets.ACR_LOGIN_SERVER }}/${{ secrets.ACR_REPOSITORY }}:${{ github.event.inputs.image_tag }}
 
       # 9. 배포용 레포지토리 체크아웃
       - name: Checkout deployment repository 
