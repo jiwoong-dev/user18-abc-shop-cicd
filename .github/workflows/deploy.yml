@@ -11,15 +11,13 @@ on:
 
 jobs:
   build-and-push:
-    name: Build and Push Container Image to ECR & ACR
+    name: Build and Push Container Image
     runs-on: ubuntu-latest
 
     steps:
-      # 1. 소스코드 체크아웃
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. AWS 자격증명 설정
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -27,32 +25,21 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # 3. Amazon ECR 로그인
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      # 4. Docker Buildx 설치 및 ecr-builder 생성
-      - name: Set up Buildx for ECR
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-        with:
-          driver: docker-container
-          buildkitd-flags: --debug
-          install: true
-          name: ecr-builder
-          use: true
-
-      # 5. Amazon ECR로 빌드 및 푸시
-      - name: Build and Push to Amazon ECR
+        
+      - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          builder: ecr-builder
           tags: |
             ${{ secrets.ECR_BACKEND_REPOSITORY }}:${{ github.event.inputs.image_tag }}
-
-      # 6. Azure ACR 로그인
+            
       - name: Login to Azure ACR
         uses: azure/docker-login@v1
         with:
@@ -60,52 +47,3 @@ jobs:
           username: ${{ secrets.ACR_USERNAME }}
           password: ${{ secrets.ACR_PASSWORD }}
 
-      # 7. Docker Buildx 설치 및 acr-builder 생성
-      - name: Set up Buildx for ACR
-        uses: docker/setup-buildx-action@v3
-        with:
-          driver: docker-container
-          buildkitd-flags: --debug
-          install: true
-          name: acr-builder
-          use: true
-
-      # 8. Azure ACR로 빌드 및 푸시
-#      - name: Build and Push to Azure ACR
-#        uses: docker/build-push-action@v5
-#        with:
-#          context: .
-#          push: true
-#          builder: acr-builder
-#          tags: |
-#            ${{ secrets.ACR_LOGIN_SERVER }}/${{ secrets.ACR_REPOSITORY }}:${{ github.event.inputs.image_tag }}
-
-      # 9. 배포용 레포지토리 체크아웃
-      - name: Checkout deployment repository 
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ secrets.DEPLOYMENT_REPO_NAME }}
-          token: ${{ secrets.DEPLOYMENT_REPO_PAT }}
-          path: 'deployment-repo'
-
-      # 10. Kustomize 설치
-      - name: Install Kustomize 
-        run: |
-          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
-          sudo mv kustomize /usr/local/bin/
-
-      # 11. Kubernetes 매니페스트 업데이트
-      - name: Update Kubernetes manifest
-        run: |
-          cd deployment-repo/k8s/shopping-mall/backend/overlays/aws
-          kustomize edit set image backend-image=${{ secrets.ECR_BACKEND_REPOSITORY }}:${{ github.event.inputs.image_tag }}
-
-      # 12. GitHub 레포지토리에 변경사항 커밋 및 푸시
-      - name: Commit and push changes
-        run: |
-          cd deployment-repo
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add .
-          git commit -m "Update backend image to tag ${{ github.event.inputs.image_tag }}" || echo "No changes to commit"
-          git push
