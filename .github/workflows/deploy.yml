@@ -55,10 +55,5 @@ jobs:
           tags: |
             ${{ secrets.ACR_LOGIN_SERVER }}/${{ secrets.ACR_REPOSITORY }}:${{ github.event.inputs.image_tag }}
 
-      - name: Checkout deployment repository 
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ secrets.DEPLOYMENT_REPO_NAME }} 
-          token: ${{ secrets.DEPLOYMENT_REPO_PAT }} 
-          path: 'deployment-repo' 
+
 
